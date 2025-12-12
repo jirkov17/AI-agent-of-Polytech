@@ -1,25 +1,33 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.views import APIView
+import threading
+
 from apps.chat.models import Chat, Message
 from apps.api.serializers.chat_serializers import (
     ChatSerializer,
     ChatListSerializer,
     MessageSerializer,
-    MessageCreateSerializer
+    MessageCreateSerializer,
 )
 from ..utils import send_to_n8n
-from rest_framework.views import APIView
-import threading
 
 
 class ChatViewSet(viewsets.ModelViewSet):
-    queryset = Chat.objects.all().order_by('-updated_at')
+    serializer_class = ChatSerializer
+
+    def get_queryset(self):
+        return Chat.objects.filter(user=self.request.user).order_by('-updated_at')
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
     def get_serializer_class(self):
         if self.action == 'list':
             return ChatListSerializer
         return ChatSerializer
+
 
     @action(detail=True, methods=['get'])
     def messages(self, request, pk=None):
