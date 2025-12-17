@@ -25,16 +25,24 @@ apiClient.interceptors.request.use(
 );
 
 // Response interceptor
-apiClient.interceptors.response.use(
-  (response) => {
-    // Handle successful responses
-    return response;
+// Request interceptor
+// Request interceptor
+apiClient.interceptors.request.use(
+  (config) => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('accessToken')
+      if (token) {
+        config.headers = config.headers || {}
+        config.headers['Authorization'] = `Bearer ${token}`
+      }
+    }
+    return config
   },
   (error) => {
-    // Handle errors centrally
-    console.error('API Error:', error.response?.data || error.message);
-    return Promise.reject(error);
+    return Promise.reject(error)
   }
-);
+)
+
+
 
 export default apiClient; 
